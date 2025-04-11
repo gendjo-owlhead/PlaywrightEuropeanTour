@@ -1,7 +1,7 @@
 pipeline {
     agent {
         docker {
-            image 'mcr.microsoft.com/playwright:v1.42.1-jammy'
+            image 'mcr.microsoft.com/playwright:v1.51.1-jammy'
             args '--ipc=host'
         }
     }
@@ -17,25 +17,44 @@ pipeline {
             }
         }
 
-        stage('Setup') {
+        stage('Install Dependencies') {
             steps {
                 sh '''
                     npm ci
-                    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright npx playwright install
-                    ls -la /ms-playwright || true
+                    npx playwright install --with-deps
                 '''
             }
         }
 
         stage('Run Tests') {
             steps {
-                sh 'PLAYWRIGHT_BROWSERS_PATH=/ms-playwright npx playwright test --workers=1'
+                script {
+                    try {
+                        sh '''
+                            PLAYWRIGHT_BROWSERS_PATH=/ms-playwright npx playwright test --reporter=list,html
+                            echo "Test execution completed"
+                        '''
+                    } catch (err) {
+                        unstable('Some tests failed')
+                        currentBuild.result = 'UNSTABLE'
+                    }
+                }
             }
         }
 
-        stage('Archive Reports') {
+        stage('Publish Reports') {
             steps {
                 archiveArtifacts artifacts: 'playwright-report/**/*', fingerprint: true
+                archiveArtifacts artifacts: 'test-results/**/*', fingerprint: true
+                publishHTML([
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: true,
+                    keepAll: true,
+                    reportDir: 'playwright-report',
+                    reportFiles: 'index.html',
+                    reportName: 'Playwright Report',
+                    reportTitles: ''
+                ])
             }
         }
     }
