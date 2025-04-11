@@ -1,14 +1,22 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs 'Node.js' // Make sure this matches your Jenkins NodeJS installation name
-    }
-
     stages {
         stage('Checkout') {
             steps {
                 checkout scm
+            }
+        }
+
+        stage('Setup NodeJS') {
+            steps {
+                // Use nvm or the system's node if available
+                sh '''
+                    export NVM_DIR="$HOME/.nvm"
+                    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                    node -v
+                    npm -v
+                '''
             }
         }
 
