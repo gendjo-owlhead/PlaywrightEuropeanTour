@@ -6,6 +6,10 @@ pipeline {
         }
     }
 
+    environment {
+        PLAYWRIGHT_BROWSERS_PATH = '/ms-playwright'
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -13,31 +17,19 @@ pipeline {
             }
         }
 
-        stage('Show Environment') {
-            steps {
-                sh '''
-                    node --version
-                    npm --version
-                '''
-            }
-        }
-
-        stage('Install Dependencies') {
+        stage('Setup') {
             steps {
                 sh '''
                     npm ci
-                    npx playwright install --with-deps chromium firefox webkit
+                    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright npx playwright install
+                    ls -la /ms-playwright || true
                 '''
             }
         }
 
         stage('Run Tests') {
             steps {
-                sh '''
-                    echo "Installed browsers:"
-                    ls -la /ms-playwright
-                    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright npx playwright test
-                '''
+                sh 'PLAYWRIGHT_BROWSERS_PATH=/ms-playwright npx playwright test --workers=1'
             }
         }
 
