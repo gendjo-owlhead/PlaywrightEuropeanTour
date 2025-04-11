@@ -1,8 +1,9 @@
 pipeline {
-    agent any
-
-    environment {
-        PATH = "/usr/local/bin:${env.PATH}"
+    agent {
+        docker {
+            image 'mcr.microsoft.com/playwright:v1.40.0-jammy'
+            args '--ipc=host'  // Required for Playwright
+        }
     }
 
     stages {
@@ -12,31 +13,18 @@ pipeline {
             }
         }
 
-        stage('Setup Node.js') {
+        stage('Show Environment') {
             steps {
-                script {
-                    // First try to use nvm if available
-                    sh '''#!/bin/bash
-                        if [ -f "$HOME/.nvm/nvm.sh" ]; then
-                            . "$HOME/.nvm/nvm.sh"
-                            nvm install 18 || true
-                            nvm use 18 || true
-                        else
-                            # If nvm is not available, try to use system node
-                            node -v || echo "Node.js not found"
-                            npm -v || echo "npm not found"
-                        fi
-                    '''
-                }
+                sh '''
+                    node --version
+                    npm --version
+                '''
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                sh '''#!/bin/bash
-                    npm install
-                    npx playwright install --with-deps
-                '''
+                sh 'npm ci'  // Using ci instead of install for more reliable builds
             }
         }
 
@@ -48,9 +36,14 @@ pipeline {
 
         stage('Archive Reports') {
             steps {
-                // Archive the test results and reports
                 archiveArtifacts artifacts: 'playwright-report/**/*', fingerprint: true
             }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()  // Clean up workspace after build
         }
     }
 }
