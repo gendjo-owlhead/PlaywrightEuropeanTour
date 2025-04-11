@@ -14,10 +14,10 @@
     "european-tour"
   ],
   "devDependencies": {
-    "@playwright/test": "^1.42.1",
+    "@playwright/test": "^1.51.1",
     "@types/node": "^20.11.24"
   },
   "engines": {
     "node": ">=16.0.0"
   }
-} 
+}
