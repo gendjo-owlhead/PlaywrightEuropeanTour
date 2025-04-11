@@ -24,13 +24,16 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm ci'  // Using ci instead of install for more reliable builds
+                sh '''
+                    npm ci
+                    npx playwright install chromium firefox webkit --with-deps
+                '''
             }
         }
 
         stage('Run Tests') {
             steps {
-                sh 'npx playwright test'
+                sh 'PLAYWRIGHT_BROWSERS_PATH=/ms-playwright npx playwright test'
             }
         }
 
