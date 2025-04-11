@@ -1,8 +1,8 @@
 pipeline {
     agent {
         docker {
-            image 'mcr.microsoft.com/playwright:v1.51.1-jammy'
-            args '--ipc=host'  // Required for Playwright
+            image 'mcr.microsoft.com/playwright:v1.42.1-jammy'
+            args '--ipc=host'
         }
     }
 
@@ -26,14 +26,18 @@ pipeline {
             steps {
                 sh '''
                     npm ci
-                    npx playwright install chromium firefox webkit --with-deps
+                    npx playwright install --with-deps chromium firefox webkit
                 '''
             }
         }
 
         stage('Run Tests') {
             steps {
-                sh 'PLAYWRIGHT_BROWSERS_PATH=/ms-playwright npx playwright test'
+                sh '''
+                    echo "Installed browsers:"
+                    ls -la /ms-playwright
+                    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright npx playwright test
+                '''
             }
         }
 
@@ -46,7 +50,7 @@ pipeline {
 
     post {
         always {
-            cleanWs()  // Clean up workspace after build
+            cleanWs()
         }
     }
 }
