@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+        PATH = "/usr/local/bin:${env.PATH}"
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -8,22 +12,31 @@ pipeline {
             }
         }
 
-        stage('Setup NodeJS') {
+        stage('Setup Node.js') {
             steps {
-                // Use nvm or the system's node if available
-                sh '''
-                    export NVM_DIR="$HOME/.nvm"
-                    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-                    node -v
-                    npm -v
-                '''
+                script {
+                    // First try to use nvm if available
+                    sh '''#!/bin/bash
+                        if [ -f "$HOME/.nvm/nvm.sh" ]; then
+                            . "$HOME/.nvm/nvm.sh"
+                            nvm install 18 || true
+                            nvm use 18 || true
+                        else
+                            # If nvm is not available, try to use system node
+                            node -v || echo "Node.js not found"
+                            npm -v || echo "npm not found"
+                        fi
+                    '''
+                }
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
-                sh 'npx playwright install --with-deps'
+                sh '''#!/bin/bash
+                    npm install
+                    npx playwright install --with-deps
+                '''
             }
         }
 
@@ -33,23 +46,11 @@ pipeline {
             }
         }
 
-        stage('Generate Report') {
+        stage('Archive Reports') {
             steps {
-                sh 'npx playwright show-report'
+                // Archive the test results and reports
+                archiveArtifacts artifacts: 'playwright-report/**/*', fingerprint: true
             }
-        }
-    }
-
-    post {
-        always {
-            publishHTML(target: [
-                allowMissing: false,
-                alwaysLinkToLastBuild: true,
-                keepAll: true,
-                reportDir: 'playwright-report',
-                reportFiles: 'index.html',
-                reportName: 'Playwright Report'
-            ])
         }
     }
 }
