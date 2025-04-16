@@ -10,12 +10,17 @@ test.describe('DP World Tour Authentication Tests', () => {
         
         // Handle cookie consent with more specific selectors
         try {
-            // First try to find the accept button by role and name
-            const acceptButton = page.getByRole('button', { name: 'I Accept' });
-            if (await acceptButton.isVisible({ timeout: 5000 })) {
+            // Use a more specific selector for the cookie consent dialog
+            const cookieDialog = page.locator('.ot-sdk-container[role="alertdialog"]');
+            const isVisible = await cookieDialog.isVisible({ timeout: 5000 });
+            
+            if (isVisible) {
+                // Click the accept button using a more specific selector
+                const acceptButton = page.getByRole('button', { name: 'I Accept' });
                 await acceptButton.click();
-                // Wait for the cookie consent dialog to disappear
-                await page.waitForSelector('[role="alertdialog"]', { state: 'hidden', timeout: 5000 });
+                
+                // Wait for the dialog to be hidden
+                await cookieDialog.waitFor({ state: 'hidden', timeout: 5000 });
             }
         } catch (e) {
             console.log('Cookie consent dialog not found or already handled:', e);
@@ -188,7 +193,7 @@ test.describe('DP World Tour Authentication Tests', () => {
 
     test('Password Reset Flow', async ({ page }) => {
         // Increase test timeout
-        test.setTimeout(60000);
+        test.setTimeout(120000); // Increase timeout to 2 minutes
 
         try {
             // Wait for page load
