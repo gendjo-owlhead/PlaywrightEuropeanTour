@@ -8,14 +8,17 @@ test.describe('DP World Tour Authentication Tests', () => {
         // Navigate to the homepage before each test
         await page.goto('https://www.europeantour.com');
         
-        // Handle cookie consent
+        // Handle cookie consent with more specific selectors
         try {
+            // First try to find the accept button by role and name
             const acceptButton = page.getByRole('button', { name: 'I Accept' });
-            await expect(acceptButton).toBeVisible({ timeout: 10000 });
-            await acceptButton.click();
-            await expect(page.locator('[role="alertdialog"]')).not.toBeVisible();
+            if (await acceptButton.isVisible({ timeout: 5000 })) {
+                await acceptButton.click();
+                // Wait for the cookie consent dialog to disappear
+                await page.waitForSelector('[role="alertdialog"]', { state: 'hidden', timeout: 5000 });
+            }
         } catch (e) {
-            console.log('Cookie consent might not be present:', e);
+            console.log('Cookie consent dialog not found or already handled:', e);
         }
     });
 
