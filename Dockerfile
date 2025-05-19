@@ -1,4 +1,4 @@
-docker build -t playwright-european-tour .# Use official Node.js LTS image
+# Use official Node.js LTS image
 FROM mcr.microsoft.com/playwright:v1.43.1-jammy
 
 # Set working directory
