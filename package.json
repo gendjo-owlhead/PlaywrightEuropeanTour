@@ -19,5 +19,10 @@
   },
   "engines": {
     "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "@hyperbrowser/sdk": "^0.44.0",
+    "dotenv": "^16.5.0",
+    "playwright-core": "^1.52.0"
   }
 }
